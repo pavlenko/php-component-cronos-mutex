@@ -1,0 +1,40 @@
+{
+    "config": {
+        "sort-packages": true
+    },
+    "name": "pe/component-cronos-mutex",
+    "description": "Cronos mutex component",
+    "keywords": [],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eugene Pavlenko",
+            "email": "pavlenko.obs@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "doctrine/dbal": "~2.6",
+        "phpunit/phpunit": "~6.0"
+    },
+    "suggest": {
+        "doctrine/dbal": "For use database storage"
+    },
+    "autoload": {
+        "psr-4": {
+            "PE\\Component\\Cronos\\Mutex\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PE\\Component\\Cronos\\Mutex\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
