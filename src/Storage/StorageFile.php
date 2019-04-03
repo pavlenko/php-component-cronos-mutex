@@ -7,14 +7,23 @@ final class StorageFile extends StorageBase
     /**
      * @var string
      */
-    protected $dirname;
+    private $dirname;
 
     /**
-     * @param string $dirname
+     * @var callable
      */
-    public function __construct(string $dirname)
+    private $factory;
+
+    /**
+     * @param string        $dirname
+     * @param callable|null $factory
+     */
+    public function __construct(string $dirname, callable $factory = null)
     {
         $this->dirname = $dirname;
+        $this->factory = $factory ?: function (string $path): \SplFileObject {
+            return new \SplFileObject($path, 'cb');
+        };
     }
 
     /**
@@ -76,7 +85,7 @@ final class StorageFile extends StorageBase
     private function open(string $name): ?\SplFileObject
     {
         try {
-            return new \SplFileObject("{$this->dirname}/{$name}.lock", 'cb');
+            return call_user_func($this->factory, "{$this->dirname}/{$name}.lock");
         } catch (\Throwable $exception) {
             return null;
         }
