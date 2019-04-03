@@ -24,12 +24,12 @@ final class StorageFile extends StorageBase
     {
         if ($file = $this->open($name)) {
             if ($wait < 1) {
-                return flock($file, LOCK_EX|LOCK_NB);
+                return $file->flock(LOCK_EX|LOCK_NB);
             }
 
             $wait *= 1000000;
 
-            while (!flock($file, LOCK_EX|LOCK_NB, $blocking)) {
+            while (!$file->flock(LOCK_EX|LOCK_NB, $blocking)) {
                 if ($blocking && $wait > 0) {
                     $wait -= 10000;
                     usleep(10000);
@@ -50,10 +50,7 @@ final class StorageFile extends StorageBase
     public function releaseLock(string $name): bool
     {
         if ($file = $this->open($name)) {
-            flock($file, LOCK_UN);
-            fclose($file);
-
-            return true;
+            return $file->flock(LOCK_UN);
         }
 
         return false;
@@ -74,10 +71,14 @@ final class StorageFile extends StorageBase
     /**
      * @param string $name
      *
-     * @return resource|false
+     * @return \SplFileObject|null
      */
-    private function open(string $name)
+    private function open(string $name): ?\SplFileObject
     {
-        return fopen("{$this->dirname}/{$name}.lock", 'cb');
+        try {
+            return new \SplFileObject("{$this->dirname}/{$name}.lock", 'cb');
+        } catch (\Throwable $exception) {
+            return null;
+        }
     }
 }
