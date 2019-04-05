@@ -4,7 +4,7 @@ namespace PE\Component\Cronos\Mutex\Storage;
 
 use Predis\Client;
 
-final class StorageRedis extends StorageBase
+final class StorageRedis implements StorageInterface
 {
     /**
      * @var Client|\Redis

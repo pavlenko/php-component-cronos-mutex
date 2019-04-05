@@ -5,7 +5,7 @@ namespace PE\Component\Cronos\Mutex\Storage;
 use MongoDB\Client;
 use MongoDB\Collection;
 
-final class StorageMongoDB extends StorageBase
+final class StorageMongoDB implements StorageInterface
 {
     /**
      * @var Collection

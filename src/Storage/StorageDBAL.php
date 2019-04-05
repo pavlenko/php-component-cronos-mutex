@@ -5,7 +5,7 @@ namespace PE\Component\Cronos\Mutex\Storage;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 
-final class StorageDBAL extends StorageBase
+final class StorageDBAL implements StorageInterface
 {
     /**
      * @var Connection

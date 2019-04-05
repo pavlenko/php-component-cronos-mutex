@@ -25,11 +25,4 @@ interface StorageInterface
      * @return bool
      */
     public function containLock(string $name): bool;
-
-    /**
-     * @param string   $name
-     * @param callable $callable
-     * @param int      $wait
-     */
-    public function synchronize(string $name, callable $callable, int $wait = 0): void;
 }

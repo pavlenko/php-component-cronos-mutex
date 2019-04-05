@@ -2,7 +2,7 @@
 
 namespace PE\Component\Cronos\Mutex\Storage;
 
-final class StorageFile extends StorageBase
+final class StorageFile implements StorageInterface
 {
     /**
      * @var string
