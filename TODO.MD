@@ -1,0 +1,1 @@
+- Remove wait from storage interface
