@@ -5,11 +5,9 @@ namespace PE\Component\Cronos\Mutex;
 interface LockInterface
 {
     /**
-     * @param int $waitMS
-     *
      * @return bool
      */
-    public function acquireLock(int $waitMS = 0): bool;
+    public function acquireLock(): bool;
 
     /**
      * @return bool

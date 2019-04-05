@@ -20,23 +20,10 @@ class LockFile implements LockInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(int $waitMS = 0): bool
+    public function acquireLock(): bool
     {
         if ($file = fopen($this->path, 'cb')) {
-            if ($waitMS < 1) {
-                return flock($file, LOCK_EX|LOCK_NB);
-            }
-
-            while (!flock($file, LOCK_EX|LOCK_NB, $blocking)) {
-                if ($blocking && $waitMS > 0) {
-                    $waitMS--;
-                    usleep(1000);
-                } else {
-                    return false;
-                }
-            }
-
-            return true;
+            return flock($file, LOCK_EX|LOCK_NB);
         }
 
         return false;

@@ -24,13 +24,8 @@ class LockDBAL implements LockInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(int $wait = 0): bool
+    public function acquireLock(): bool
     {
-        while ($wait > 0 && $this->containLock()) {
-            $wait--;
-            sleep(1);
-        }
-
         return !$this->containLock() && $this->connection->insert($this->table, ['name' => $this->name]);
     }
 
