@@ -31,6 +31,13 @@ final class Mutex implements MutexInterface
      */
     public function synchronize(callable $callable, int $wait = 0): void
     {
-        $this->storage->synchronize($this->name, $callable, $wait);
+        //TODO wait logic
+        if ($this->storage->acquireLock($this->name)) {
+            try {
+                $callable();
+            } catch (\Exception $exception) {}
+
+            $this->storage->releaseLock($this->name);
+        }
     }
 }
