@@ -29,9 +29,32 @@ final class Mutex implements MutexInterface
     /**
      * @inheritDoc
      */
-    public function synchronize(callable $callable, int $wait = 0): void
+    public function acquireLock(string $name): bool
     {
-        //TODO wait logic
+        return $this->storage->acquireLock($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function releaseLock(string $name): bool
+    {
+        return $this->storage->releaseLock($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function containLock(string $name): bool
+    {
+        return $this->storage->containLock($name);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function synchronize(callable $callable): void
+    {
         if ($this->storage->acquireLock($this->name)) {
             try {
                 $callable();

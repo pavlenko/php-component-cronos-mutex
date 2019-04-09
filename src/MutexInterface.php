@@ -5,8 +5,28 @@ namespace PE\Component\Cronos\Mutex;
 interface MutexInterface
 {
     /**
-     * @param callable $callable
-     * @param int      $wait
+     * @param string $name
+     *
+     * @return bool
      */
-    public function synchronize(callable $callable, int $wait = 0): void;
+    public function acquireLock(string $name): bool;
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function releaseLock(string $name): bool;
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function containLock(string $name): bool;
+
+    /**
+     * @param callable $callable
+     */
+    public function synchronize(callable $callable): void;
 }
