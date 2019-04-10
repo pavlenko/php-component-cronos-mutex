@@ -29,38 +29,40 @@ final class Mutex implements MutexInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(string $name): bool
+    public function acquireLock(): bool
     {
-        return $this->storage->acquireLock($name);
+        return $this->storage->acquireLock($this->name);
     }
 
     /**
      * @inheritDoc
      */
-    public function releaseLock(string $name): bool
+    public function releaseLock(): bool
     {
-        return $this->storage->releaseLock($name);
+        return $this->storage->releaseLock($this->name);
     }
 
     /**
      * @inheritDoc
      */
-    public function containLock(string $name): bool
+    public function containLock(): bool
     {
-        return $this->storage->containLock($name);
+        return $this->storage->containLock($this->name);
     }
 
     /**
      * @inheritDoc
      */
-    public function synchronize(callable $callable): void
+    public function synchronize(callable $callable): bool
     {
         if ($this->storage->acquireLock($this->name)) {
             try {
                 $callable();
             } catch (\Exception $exception) {}
 
-            $this->storage->releaseLock($this->name);
+            return $this->storage->releaseLock($this->name);
         }
+
+        return false;
     }
 }
