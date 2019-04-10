@@ -3,6 +3,8 @@
 namespace PE\Component\Cronos\Mutex\Tests\Storage;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use PE\Component\Cronos\Mutex\Storage\StorageDBAL;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -10,7 +12,8 @@ use PHPUnit\Framework\TestCase;
 
 class StorageDBALTest extends TestCase
 {
-    private const NAME = 'MUTEX';
+    private const NAME  = 'MUTEX';
+    private const TABLE = 'table';
 
     /**
      * @var Connection|MockObject
@@ -34,99 +37,43 @@ class StorageDBALTest extends TestCase
             return $v;
         });
 
-        $this->storage = new StorageDBAL($this->connection);
+        $this->storage = new StorageDBAL($this->connection, self::TABLE);
     }
 
-    public function testAcquireLockAlreadyContain(): void
-    {
-        $this->connection
-            ->expects(self::any())
-            ->method('fetchColumn')
-            ->withConsecutive(
-                [sprintf('SELECT IS_FREE_LOCK(\'%s\')', self::NAME)]
-            )
-            ->willReturnOnConsecutiveCalls(
-                '1'
-            );
-
-        self::assertFalse($this->storage->acquireLock(self::NAME));
-    }
-
-    public function testAcquireLockReturnsTrue(): void
-    {
-        $this->connection
-            ->expects(self::any())
-            ->method('fetchColumn')
-            ->withConsecutive(
-                [sprintf('SELECT IS_FREE_LOCK(\'%s\')', self::NAME)],
-                [sprintf('SELECT GET_LOCK(\'%s\', %s)', self::NAME, 1000)]
-            )
-            ->willReturnOnConsecutiveCalls(
-                '0',
-                '1'
-            );
-
-        self::assertTrue($this->storage->acquireLock(self::NAME, 1000));
-    }
-
-    public function testAcquireLockReturnsFalse(): void
-    {
-        $this->connection
-            ->expects(self::any())
-            ->method('fetchColumn')
-            ->withConsecutive(
-                [sprintf('SELECT IS_FREE_LOCK(\'%s\')', self::NAME)],
-                [sprintf('SELECT GET_LOCK(\'%s\', %s)', self::NAME, 1000)]
-            )
-            ->willReturnOnConsecutiveCalls(
-                '0',
-                '0'
-            );
-
-        self::assertFalse($this->storage->acquireLock(self::NAME, 1000));
-    }
-
-    public function testReleaseLockReturnsTrue(): void
+    public function testAcquireLock(): void
     {
         $this->connection
             ->expects(self::once())
-            ->method('fetchColumn')
-            ->with(sprintf('SELECT RELEASE_LOCK(\'%s\')', self::NAME))
-            ->willReturn('1');
+            ->method('insert')
+            ->with(self::TABLE, ['name' => self::NAME])
+            ->willReturn(true);
+
+        self::assertTrue($this->storage->acquireLock(self::NAME));
+    }
+
+    public function testReleaseLock(): void
+    {
+        $this->connection
+            ->expects(self::once())
+            ->method('delete')
+            ->with(self::TABLE, ['name' => self::NAME])
+            ->willReturn(true);
 
         self::assertTrue($this->storage->releaseLock(self::NAME));
     }
 
-    public function testReleaseLockReturnsFalse(): void
+    public function testContainLock(): void
     {
-        $this->connection
-            ->expects(self::once())
-            ->method('fetchColumn')
-            ->with(sprintf('SELECT RELEASE_LOCK(\'%s\')', self::NAME))
-            ->willReturn('0');
+        $this->connection->method('createQueryBuilder')->willReturn(new QueryBuilder($this->connection));
+        $this->connection->method('getExpressionBuilder')->willReturn(new ExpressionBuilder($this->connection));
 
-        self::assertFalse($this->storage->releaseLock(self::NAME));
-    }
-
-    public function testContainLockReturnsTrue(): void
-    {
         $this->connection
-            ->expects(self::once())
+            ->expects(self::exactly(2))
             ->method('fetchColumn')
-            ->with(sprintf('SELECT IS_FREE_LOCK(\'%s\')', self::NAME))
-            ->willReturn('1');
+            ->with(sprintf('SELECT id FROM table WHERE name = \'%s\'', self::NAME))
+            ->willReturnOnConsecutiveCalls('1', null);
 
         self::assertTrue($this->storage->containLock(self::NAME));
-    }
-
-    public function testContainLockReturnsFalse(): void
-    {
-        $this->connection
-            ->expects(self::once())
-            ->method('fetchColumn')
-            ->with(sprintf('SELECT IS_FREE_LOCK(\'%s\')', self::NAME))
-            ->willReturn('0');
-
         self::assertFalse($this->storage->containLock(self::NAME));
     }
 }

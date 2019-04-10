@@ -29,6 +29,8 @@ final class StorageDBAL implements StorageInterface
 
     /**
      * @throws \Doctrine\DBAL\DBALException
+     *
+     * @codeCoverageIgnore
      */
     public function initialize()
     {
@@ -72,6 +74,12 @@ final class StorageDBAL implements StorageInterface
      */
     public function containLock(string $name): bool
     {
-        return (bool) $this->connection->fetchColumn($this->tableName, ['name' => $name]);
+        $query = $this->connection->createQueryBuilder();
+        $query
+            ->select('id')
+            ->from($this->tableName)
+            ->where($query->expr()->eq('name', $this->connection->quote($name, Type::STRING)));
+
+        return (bool) $this->connection->fetchColumn($query->getSQL());
     }
 }
