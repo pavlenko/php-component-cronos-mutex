@@ -13,11 +13,42 @@ final class StorageDBAL implements StorageInterface
     private $connection;
 
     /**
-     * @param Connection $connection
+     * @var string
      */
-    public function __construct(Connection $connection)
+    private $tableName;
+
+    /**
+     * @param Connection $connection
+     * @param string     $tableName
+     */
+    public function __construct(Connection $connection, string $tableName)
     {
         $this->connection = $connection;
+        $this->tableName  = $tableName;
+    }
+
+    /**
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function initialize()
+    {
+        $platform  = $this->connection->getDatabasePlatform();
+        $schemaOld = $this->connection->getSchemaManager()->createSchema();
+        $schemaNew = clone $schemaOld;
+
+        if ($schemaOld->hasTable($this->tableName)) {
+            $schemaNew->dropTable($this->tableName);
+        }
+
+        $table = $schemaNew->createTable($this->tableName);
+        $table->addColumn('id', Type::INTEGER, ['unsigned' => true, 'autoincrement' => true]);
+        $table->addColumn('name', Type::STRING, ['length' => 255, 'notnull' => true]);
+        $table->setPrimaryKey(['id']);
+        $table->addUniqueIndex(['name'], 'idx_name');
+
+        foreach ($schemaOld->getMigrateToSql($schemaNew, $platform) as $sql) {
+            $this->connection->executeQuery($sql);
+        }
     }
 
     /**
@@ -25,11 +56,7 @@ final class StorageDBAL implements StorageInterface
      */
     public function acquireLock(string $name, int $wait = 0): bool
     {
-        return !$this->containLock($name) && (bool) $this->connection->fetchColumn(sprintf(
-            'SELECT GET_LOCK(%s, %s)',
-            $this->connection->quote($name, Type::STRING),
-            $this->connection->quote($wait, Type::INTEGER)
-        ));
+        return (bool) $this->connection->insert($this->tableName, ['name' => $name]);
     }
 
     /**
@@ -37,10 +64,7 @@ final class StorageDBAL implements StorageInterface
      */
     public function releaseLock(string $name): bool
     {
-        return (bool) $this->connection->fetchColumn(sprintf(
-            'SELECT RELEASE_LOCK(%s)',
-            $this->connection->quote($name, Type::STRING)
-        ));
+        return (bool) $this->connection->delete($this->tableName, ['name' => $name]);
     }
 
     /**
@@ -48,9 +72,6 @@ final class StorageDBAL implements StorageInterface
      */
     public function containLock(string $name): bool
     {
-        return (bool) $this->connection->fetchColumn(sprintf(
-            'SELECT IS_FREE_LOCK(%s)',
-            $this->connection->quote($name, Type::STRING)
-        ));
+        return (bool) $this->connection->fetchColumn($this->tableName, ['name' => $name]);
     }
 }
