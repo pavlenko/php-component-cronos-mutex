@@ -6,11 +6,10 @@ interface StorageInterface
 {
     /**
      * @param string $name
-     * @param int    $wait
      *
      * @return bool
      */
-    public function acquireLock(string $name, int $wait = 0): bool;
+    public function acquireLock(string $name): bool;
 
     /**
      * @param string $name

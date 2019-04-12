@@ -56,7 +56,7 @@ final class StorageDBAL implements StorageInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(string $name, int $wait = 0): bool
+    public function acquireLock(string $name): bool
     {
         return (bool) $this->connection->insert($this->tableName, ['name' => $name]);
     }

@@ -20,7 +20,7 @@ final class StorageFile implements StorageInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(string $name, int $wait = 0): bool
+    public function acquireLock(string $name): bool
     {
         if ($file = @fopen("{$this->dirname}/{$name}.lock", 'cb')) {
             return flock($file, LOCK_EX|LOCK_NB);

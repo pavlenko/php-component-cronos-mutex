@@ -25,7 +25,7 @@ final class StorageMongoDB implements StorageInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(string $name, int $wait = 0): bool
+    public function acquireLock(string $name): bool
     {
         return $this->collection->insertOne(['name' => $name])->getInsertedCount() > 0;
     }

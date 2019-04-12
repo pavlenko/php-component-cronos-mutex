@@ -26,7 +26,7 @@ final class StorageRedis implements StorageInterface
     /**
      * @inheritDoc
      */
-    public function acquireLock(string $name, int $wait = 0): bool
+    public function acquireLock(string $name): bool
     {
         return (bool) $this->client->setnx($name, '1');
     }
