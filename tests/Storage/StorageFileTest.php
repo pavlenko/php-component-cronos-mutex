@@ -2,61 +2,33 @@
 
 namespace PE\Component\Cronos\Mutex\Tests\Storage;
 
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamFile;
+use org\bovigo\vfs\vfsStreamWrapper;
 use PE\Component\Cronos\Mutex\Storage\StorageFile;
 use PHPUnit\Framework\TestCase;
 
-//TODO maybe create our own filesystem abstraction for allow mocking
 class StorageFileTest extends TestCase
 {
-    public function testConstruct(): void
+    public function testAcquireNoFile(): void
     {
-        new StorageFile('DIR');
-        $this->markTestIncomplete('there are nothing more to test');
+        $file = new vfsStreamFile('FOO.lock', vfsStreamWrapper::READONLY);
+
+        $root = vfsStream::setup();
+        $root->addChild($file);
+
+        self::assertFalse((new StorageFile($root->url()))->acquireLock('FOO'));
     }
 
-    public function testConstructFileException(): void
+    public function testAcquireNoLock(): void
     {
-        //TODO
-        $storage = new StorageFile('DIR', function ($path) {
-            $mock = $this->createMock(\SplTempFileObject::class);
-            $mock
-                ->expects(self::once())
-                ->method('__construct')
-                ->with('DIR/MUTEX.lock')
-                ->willThrowException(new \Exception());
+        $file = new vfsStreamFile('FOO.lock');
 
-            $mock->expects(self::never())->method('flock');
+        $root = vfsStream::setup();
+        $root->addChild($file);
 
-            return $mock;
-        });
+        $file->lock(fopen($file->url(), 'wb'), LOCK_SH);
 
-        self::assertFalse($storage->releaseLock('MUTEX'));
-    }
-
-    public function testAcquireLock()
-    {
-        $this->markTestSkipped();
-    }
-
-    public function testReleaseLock()
-    {
-        $storage = new StorageFile('DIR', function ($path) {
-            $mock = $this->createMock(\SplTempFileObject::class);
-            $mock
-                ->expects(self::once())
-                ->method('__construct')
-                ->with('DIR/MUTEX.lock');
-
-            $mock->expects(self::never())->method('flock')->willReturn(true);
-
-            return $mock;
-        });
-
-        self::assertTrue($storage->releaseLock('MUTEX'));
-    }
-
-    public function testContainLock()
-    {
-        $this->markTestSkipped();
+        self::assertFalse((new StorageFile($root->url()))->acquireLock('FOO'));
     }
 }

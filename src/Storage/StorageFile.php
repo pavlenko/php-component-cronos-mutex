@@ -10,20 +10,11 @@ final class StorageFile implements StorageInterface
     private $dirname;
 
     /**
-     * @var callable
+     * @param string $dirname
      */
-    private $factory;
-
-    /**
-     * @param string        $dirname
-     * @param callable|null $factory
-     */
-    public function __construct(string $dirname, callable $factory = null)
+    public function __construct(string $dirname)
     {
         $this->dirname = $dirname;
-        $this->factory = $factory ?: function (string $path): \SplFileObject {
-            return new \SplFileObject($path, 'cb');
-        };
     }
 
     /**
@@ -31,23 +22,8 @@ final class StorageFile implements StorageInterface
      */
     public function acquireLock(string $name, int $wait = 0): bool
     {
-        if ($file = $this->open($name)) {
-            if ($wait < 1) {
-                return $file->flock(LOCK_EX|LOCK_NB);
-            }
-
-            $wait *= 1000000;
-
-            while (!$file->flock(LOCK_EX|LOCK_NB, $blocking)) {
-                if ($blocking && $wait > 0) {
-                    $wait -= 10000;
-                    usleep(10000);
-                } else {
-                    return false;
-                }
-            }
-
-            return true;
+        if ($file = @fopen("{$this->dirname}/{$name}.lock", 'cb')) {
+            return flock($file, LOCK_EX|LOCK_NB);
         }
 
         return false;
@@ -58,8 +34,11 @@ final class StorageFile implements StorageInterface
      */
     public function releaseLock(string $name): bool
     {
-        if ($file = $this->open($name)) {
-            return $file->flock(LOCK_UN);
+        if ($file = fopen("{$this->dirname}/{$name}.lock", 'cb')) {
+            flock($file, LOCK_UN|LOCK_NB);
+            fclose($file);
+
+            return true;
         }
 
         return false;
@@ -70,24 +49,10 @@ final class StorageFile implements StorageInterface
      */
     public function containLock(string $name): bool
     {
-        if ($this->acquireLock($name, 0)) {
+        if ($this->acquireLock($name)) {
             return !$this->releaseLock($name);
         }
 
         return true;
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return \SplFileObject|null
-     */
-    private function open(string $name): ?\SplFileObject
-    {
-        try {
-            return call_user_func($this->factory, "{$this->dirname}/{$name}.lock");
-        } catch (\Throwable $exception) {
-            return null;
-        }
     }
 }
