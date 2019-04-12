@@ -18,11 +18,4 @@ interface MutexInterface
      * @return bool
      */
     public function containLock(): bool;
-
-    /**
-     * @param callable $callable
-     *
-     * @return bool
-     */
-    public function synchronize(callable $callable): bool;
 }

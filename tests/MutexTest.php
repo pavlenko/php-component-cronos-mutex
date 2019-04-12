@@ -59,40 +59,4 @@ class MutexTest extends TestCase
 
         self::assertTrue($this->mutex->containLock());
     }
-
-    public function testSynchronizeCannotAcquire(): void
-    {
-        $executed = false;
-        $callable = function () use (&$executed) { $executed = true; };
-
-        $this->storage->expects(self::once())->method('acquireLock')->with(self::NAME)->willReturn(false);
-        $this->storage->expects(self::never())->method('releaseLock')->with(self::NAME);
-
-        self::assertFalse($this->mutex->synchronize($callable));
-        self::assertFalse($executed);
-    }
-
-    public function testSynchronizeCannotRelease(): void
-    {
-        $executed = false;
-        $callable = function () use (&$executed) { $executed = true; };
-
-        $this->storage->expects(self::once())->method('acquireLock')->with(self::NAME)->willReturn(true);
-        $this->storage->expects(self::once())->method('releaseLock')->with(self::NAME)->willReturn(false);
-
-        self::assertFalse($this->mutex->synchronize($callable));
-        self::assertTrue($executed);
-    }
-
-    public function testSynchronizeSuccess(): void
-    {
-        $executed = false;
-        $callable = function () use (&$executed) { $executed = true; };
-
-        $this->storage->expects(self::once())->method('acquireLock')->with(self::NAME)->willReturn(true);
-        $this->storage->expects(self::once())->method('releaseLock')->with(self::NAME)->willReturn(true);
-
-        self::assertTrue($this->mutex->synchronize($callable));
-        self::assertTrue($executed);
-    }
 }

@@ -49,20 +49,4 @@ final class Mutex implements MutexInterface
     {
         return $this->storage->containLock($this->name);
     }
-
-    /**
-     * @inheritDoc
-     */
-    public function synchronize(callable $callable): bool
-    {
-        if ($this->storage->acquireLock($this->name)) {
-            try {
-                $callable();
-            } catch (\Exception $exception) {}
-
-            return $this->storage->releaseLock($this->name);
-        }
-
-        return false;
-    }
 }
