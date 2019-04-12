@@ -34,7 +34,7 @@ final class StorageFile implements StorageInterface
      */
     public function releaseLock(string $name): bool
     {
-        if ($file = fopen("{$this->dirname}/{$name}.lock", 'cb')) {
+        if ($file = @fopen("{$this->dirname}/{$name}.lock", 'cb')) {
             flock($file, LOCK_UN|LOCK_NB);
             fclose($file);
 

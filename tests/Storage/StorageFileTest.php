@@ -10,6 +10,16 @@ use PHPUnit\Framework\TestCase;
 
 class StorageFileTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        vfsStreamWrapper::register();
+    }
+
+    protected function tearDown(): void
+    {
+        vfsStreamWrapper::unregister();
+    }
+
     public function testAcquireNoFile(): void
     {
         $file = new vfsStreamFile('FOO.lock', vfsStreamWrapper::READONLY);
@@ -27,8 +37,49 @@ class StorageFileTest extends TestCase
         $root = vfsStream::setup();
         $root->addChild($file);
 
-        $file->lock(fopen($file->url(), 'wb'), LOCK_SH);
+        $file->lock($root, LOCK_EX);
 
         self::assertFalse((new StorageFile($root->url()))->acquireLock('FOO'));
+    }
+
+    public function testAcquireSuccess(): void
+    {
+        $root = vfsStream::setup();
+
+        self::assertTrue((new StorageFile($root->url()))->acquireLock('FOO'));
+    }
+
+    public function testReleaseNoFile(): void
+    {
+        $file = new vfsStreamFile('FOO.lock', vfsStreamWrapper::READONLY);
+
+        $root = vfsStream::setup();
+        $root->addChild($file);
+
+        self::assertFalse((new StorageFile($root->url()))->releaseLock('FOO'));
+    }
+
+    public function testReleaseSuccess(): void
+    {
+        $root = vfsStream::setup();
+
+        self::assertTrue((new StorageFile($root->url()))->releaseLock('FOO'));
+    }
+
+    public function testContainLock()
+    {
+        $file = new vfsStreamFile('FOO.lock', vfsStreamWrapper::READONLY);
+
+        $root = vfsStream::setup();
+        $root->addChild($file);
+
+        self::assertTrue((new StorageFile($root->url()))->containLock('FOO'));
+    }
+
+    public function testNoContainLock()
+    {
+        $root = vfsStream::setup();
+
+        self::assertFalse((new StorageFile($root->url()))->containLock('FOO'));
     }
 }
