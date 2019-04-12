@@ -21,6 +21,8 @@ namespace PE\Component\Cronos;
 
 use PE\Component\Cronos\Mutex\Storage\StorageInterface;
 use PE\Component\Cronos\Mutex\Mutex;
+use PE\Component\Cronos\Mutex\Synchronize;
+use PE\Component\Cronos\Mutex\Waiting;
 
 // Create storage
 /* @var $storage StorageInterface */
@@ -29,16 +31,18 @@ $storage = '...';
 // Create mutex
 $mutex = new Mutex('SOME_KEY', $storage);
 
-// Execute critical section via callable and timeout as second argument:
-$mutex->synchronize(function () {
-    // Do some stuff...
-}, 1);
+// You can use wrapper for wait lock released
+$mutex = new Waiting($mutex, 1000);
 
-// TODO disallow next code possibility
-// Or execute critical section via manual acquire/release calls
+// Typically execute logic
 if ($mutex->acquireLock()) {
-    // Do some stuff
-    // Then you must manually release lock
+    // Do some stuff ...
     $mutex->releaseLock();
 }
+
+// You can use synchronized wrapper for automatically acquire/release lock
+$synchronize = new Synchronize($mutex);
+$synchronize->execute(function () {
+    // Do some stuff ...
+});
 ```
